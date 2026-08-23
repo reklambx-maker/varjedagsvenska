@@ -1,0 +1,42 @@
+name: Daily Swedish Lesson
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
+
+jobs:
+  daily-lesson:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Swedish time
+        id: timecheck
+        run: |
+          HOUR=$(TZ=Europe/Stockholm date +%H)
+          if [ "$HOUR" = "06" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repository
+        if: steps.timecheck.outputs.run == 'true' || github.event_name == 'workflow_dispatch'
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        if: steps.timecheck.outputs.run == 'true' || github.event_name == 'workflow_dispatch'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        if: steps.timecheck.outputs.run == 'true' || github.event_name == 'workflow_dispatch'
+        run: pip install openai requests
+
+      - name: Run Swedish bot
+        if: steps.timecheck.outputs.run == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: python bot.py
