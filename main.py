@@ -240,7 +240,7 @@ def send_package(lesson, audio_path, pdf_path):
            files={"document": (pdf_path.name, f, "application/pdf")})
 
 def main():
-    if not should_run():
+    if os.getenv("GITHUB_EVENT_NAME") != "workflow_dispatch" and not should_run():
         print("Not 06:xx in Europe/Stockholm; exiting.")
         return
 
