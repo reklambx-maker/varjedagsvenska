@@ -1,0 +1,41 @@
+name: Daily Swedish B2-C1 Package
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 4 * * *"
+    - cron: "7 5 * * *"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install ffmpeg and fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Generate and publish
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL: "@varjedagsvenska"
+          OPENAI_TEXT_MODEL: "gpt-5.6-luna"
+          OPENAI_TTS_MODEL: "gpt-4o-mini-tts"
+        run: python main.py
